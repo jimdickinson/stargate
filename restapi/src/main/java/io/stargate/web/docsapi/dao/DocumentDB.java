@@ -142,7 +142,7 @@ public class DocumentDB {
   }
 
   public static boolean containsIllegalSequences(String x) {
-    return x.contains("[") || x.contains(".");
+    return x.contains("[") || x.contains(".") || x.contains("'");
   }
 
   public static List<Column> allColumns() {
