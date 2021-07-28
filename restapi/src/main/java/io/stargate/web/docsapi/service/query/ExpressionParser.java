@@ -279,7 +279,7 @@ public class ExpressionParser {
     List<String> convertedFieldNamePath =
         Arrays.stream(fieldNamePath)
             .map(DocsApiUtils::convertArrayPath)
-            .map(DocsApiUtils::convertUnicodeCodePoints)
+            .map(DocsApiUtils::convertEscapedCharacters)
             .collect(Collectors.toList());
 
     if (!prependedPath.isEmpty()) {
@@ -287,7 +287,7 @@ public class ExpressionParser {
           prependedPath.stream()
               .map(
                   path ->
-                      DocsApiUtils.convertUnicodeCodePoints(DocsApiUtils.convertArrayPath(path)))
+                      DocsApiUtils.convertEscapedCharacters(DocsApiUtils.convertArrayPath(path)))
               .collect(Collectors.toList());
 
       convertedFieldNamePath.addAll(0, prependedConverted);
