@@ -103,6 +103,25 @@ public interface AuthenticatedUser extends Serializable {
       return map.build();
     }
 
+    /*
+    If possible, return the backing byte array if we can use it in place of the ByteBuffer.
+    Otherwise, return a fresh byte array with the contents of the ByteBuffer copied in.
+    */
+    private static byte[] getUnderlyingBytes(ByteBuffer bb) {
+      int newsz = bb.limit() - bb.position();
+      if (bb.hasArray() && !bb.isReadOnly()) {
+        byte[] a = bb.array();
+        if (a.length == newsz) {
+          return a;
+        }
+      }
+      byte[] a = new byte[newsz];
+      int oldPos = bb.position();
+      bb.get(a);
+      bb.position(oldPos);
+      return a;
+    }
+
     public static AuthenticatedUser load(Map<String, ByteBuffer> customPayload) {
       ByteBuffer token = customPayload.get(TOKEN);
       ByteBuffer roleName = customPayload.get(ROLE);
@@ -117,14 +136,17 @@ public interface AuthenticatedUser extends Serializable {
         String key = e.getKey();
         if (key.startsWith(CUSTOM_PAYLOAD_NAME_PREFIX)) {
           String name = key.substring(CUSTOM_PAYLOAD_NAME_PREFIX.length());
-          String value = StandardCharsets.UTF_8.decode(e.getValue()).toString();
+          String value =  new String(getUnderlyingBytes(e.getValue()), StandardCharsets.UTF_8);  
           map.put(name, value);
         }
       }
 
+      String roleNameStr = new String(getUnderlyingBytes(roleName), StandardCharsets.UTF_8);
+      String tokenStr = new String(getUnderlyingBytes(token), StandardCharsets.UTF_8);
+
       return AuthenticatedUser.of(
-          StandardCharsets.UTF_8.decode(roleName).toString(),
-          StandardCharsets.UTF_8.decode(token).toString(),
+          roleNameStr,
+          tokenStr,
           (isFromExternalAuth != null),
           map.build());
     }
